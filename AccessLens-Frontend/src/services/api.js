@@ -1,20 +1,32 @@
 import axios from 'axios';
 
+// In development, CRA's dev-server proxy (see package.json "proxy" field) forwards
+// relative requests to the backend automatically, so no baseURL is needed there.
+// In production, the frontend and backend are expected to be served under a shared
+// path so relative requests still resolve correctly.
 const api = axios.create({
-  baseURL: process.env.NODE_ENV === 'development' 
-    ? 'http://localhost:8080' 
-    : '/api',
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
 export default {
-  analyzeWebsite(url) {
-    return api.post('/analyze', { url });
+  /**
+   * Runs a full accessibility analysis on a URL.
+   * Matches AccessibilityController's GET /api/accessibility endpoint.
+   */
+  analyzeWebsite(url, mode = 'default') {
+    return api.get('/api/accessibility', { params: { url, mode } });
   },
-  saveSettings(settings) {
-    return api.post('/settings', settings);
+
+  /**
+   * Fetches a cleaned, renderable version of the target page for the preview pane.
+   * Matches AccessibilityController's GET /api/accessibility/proxy endpoint.
+   */
+  fetchProxiedPage(url) {
+    return api.get('/api/accessibility/proxy', {
+      params: { url },
+      responseType: 'text',
+    });
   },
-  // Add more API methods as needed
 };

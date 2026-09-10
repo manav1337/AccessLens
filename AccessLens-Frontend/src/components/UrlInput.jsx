@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import axios from 'axios';
+import api from '../services/api';
 import '../styles/components/urlinput.css';
 
 function UrlInput({ onAnalysisComplete }) {
@@ -8,27 +8,33 @@ function UrlInput({ onAnalysisComplete }) {
   const [error, setError] = useState(null);
 
   const analyzeWebsite = async () => {
-  try {
-    const response = await axios.get(
-      `/api/accessibility?url=${encodeURIComponent(url)}&mode=default`
-    );
-    
-    if (!response.data) {
-      throw new Error('Empty response from server');
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const response = await api.analyzeWebsite(url);
+
+      if (!response.data) {
+        throw new Error('Empty response from server');
+      }
+
+      onAnalysisComplete({ ...response.data, url });
+    } catch (err) {
+      console.error('Full error details:', {
+        message: err.message,
+        response: err.response?.data,
+        status: err.response?.status,
+      });
+
+      setError(
+        err.response?.data?.message ||
+        err.response?.data ||
+        'Failed to analyze website. Please check the URL and try again.'
+      );
+    } finally {
+      setIsLoading(false);
     }
-    
-    onAnalysisComplete({ ...response.data, url });
-  } catch (err) {
-    console.error('Full error details:', {
-      message: err.message,
-      response: err.response?.data,
-      status: err.response?.status
-    });
-    
-    setError(err.response?.data?.message || 
-            'Failed to analyze website. Please check the URL and try again.');
-  }
-};
+  };
 
   return (
     <div className="url-input-container">
@@ -41,7 +47,7 @@ function UrlInput({ onAnalysisComplete }) {
           aria-label="Website URL to analyze"
           disabled={isLoading}
         />
-        <button 
+        <button
           onClick={analyzeWebsite}
           disabled={!url || isLoading}
           aria-busy={isLoading}
@@ -49,7 +55,11 @@ function UrlInput({ onAnalysisComplete }) {
           {isLoading ? 'Analyzing...' : 'Analyze'}
         </button>
       </div>
-      {error && <p className="error-message">{error}</p>}
+      {error && (
+        <p className="error-message" role="alert" aria-live="assertive">
+          {error}
+        </p>
+      )}
     </div>
   );
 }

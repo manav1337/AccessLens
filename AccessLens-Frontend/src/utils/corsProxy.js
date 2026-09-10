@@ -1,11 +1,11 @@
-export const corsProxy = (url) => {
-  return `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
-};
-
+/**
+ * Renders a readable error message inside the preview iframe/window when the
+ * backend proxy fails to fetch or transform the target page.
+ */
 export function generateErrorHtml(error) {
   return `
     <div class="error" style="
-      background: #FF4A3;
+      background: #FEE2E2;
       color: #2D3748;
       padding: 1rem;
       border-radius: 4px;
@@ -13,7 +13,7 @@ export function generateErrorHtml(error) {
       font-family: sans-serif;
     ">
       <strong>Web Accessibility Tool Error:</strong>
-      <div>${error.message || 'Unknown error'}</div>
+      <div>${error.message || error || 'Unknown error'}</div>
     </div>
   `;
 }
