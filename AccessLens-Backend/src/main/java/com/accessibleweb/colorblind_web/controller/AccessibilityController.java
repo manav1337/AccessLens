@@ -1,6 +1,6 @@
-package com.accessibleweb.controller;
+package com.accessibleweb.colorblind_web.controller;
 
-import com.accessibleweb.service.ColorService;
+import com.accessibleweb.colorblind_web.service.ColorService;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -17,6 +17,8 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.regex.Pattern;
 
+import com.accessibleweb.colorblind_web.render.RenderException;
+
 @RestController
 @RequestMapping("/api/accessibility")
 @CrossOrigin(origins = "http://localhost:3000")
@@ -27,7 +29,7 @@ public class AccessibilityController {
     );
 
     private static final String[] ALLOWED_DOMAINS = {
-        "https://instagram.com/","https://nymag.com/","https://www.oatly.com/","https://books.toscrape.com/"
+        "https://instagram.com/","https://nymag.com/","https://www.oatly.com/","https://books.toscrape.com/","https://www.trawell.in/maharashtra/lonavala/rajmachi-fort","https://www.codehelp.in/"
     };
 
     @Autowired
@@ -50,6 +52,9 @@ public class AccessibilityController {
         try {
             Map<String, Object> result = colorService.analyzeAccessibility(url, mode);
             return ResponseEntity.ok(result);
+        } catch (RenderException e) {
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
+                    .body("Could not render target page: " + e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Error processing request: " + e.getMessage());
@@ -150,43 +155,6 @@ public class AccessibilityController {
             return ResponseEntity.status(HttpStatus.BAD_GATEWAY).build();
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
-    }
-
-    private void rewriteUrls(Document doc, String baseUrl) {
-        // Rewrite all resource URLs to go through our proxy
-        String proxyBase = "/api/accessibility/proxy/";
-
-        // Links
-        for (Element link : doc.select("a[href]")) {
-            String href = link.attr("href");
-            if (!href.startsWith("http") && !href.startsWith("//")) {
-                link.attr("href", proxyBase + href + "?baseUrl=" + baseUrl);
-            }
-        }
-
-        // Images
-        for (Element img : doc.select("img[src]")) {
-            String src = img.attr("src");
-            if (!src.startsWith("http") && !src.startsWith("data:")) {
-                img.attr("src", proxyBase + src + "?baseUrl=" + baseUrl);
-            }
-        }
-
-        // CSS
-        for (Element css : doc.select("link[href]")) {
-            String href = css.attr("href");
-            if (!href.startsWith("http") && !href.startsWith("//")) {
-                css.attr("href", proxyBase + href + "?baseUrl=" + baseUrl);
-            }
-        }
-
-        // Scripts
-        for (Element script : doc.select("script[src]")) {
-            String src = script.attr("src");
-            if (!src.startsWith("http") && !src.startsWith("//")) {
-                script.attr("src", proxyBase + src + "?baseUrl=" + baseUrl);
-            }
         }
     }
 

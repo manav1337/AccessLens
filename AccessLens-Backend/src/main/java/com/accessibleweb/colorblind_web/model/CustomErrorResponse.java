@@ -1,4 +1,4 @@
-package com.accessibleweb.model;
+package com.accessibleweb.colorblind_web.model;
 
 
 import java.util.Date;
